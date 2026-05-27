@@ -1,4 +1,5 @@
 using DataIngestService.Data;
+using DataIngestService.Infrastructure.ExceptionHandling;
 using DataIngestService.Services.Transactions;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,8 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddControllers();
+        builder.Services.AddProblemDetails();
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.Configure<IngestionOptions>(builder.Configuration.GetSection(IngestionOptions.SectionName));
         builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
         builder.Services.AddSingleton(TimeProvider.System);
@@ -36,6 +39,7 @@ public class Program
             app.UseSwaggerUI();
         }
 
+        app.UseExceptionHandler();
         app.UseAuthorization();
         app.MapControllers();
 
