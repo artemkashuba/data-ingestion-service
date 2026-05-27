@@ -1,4 +1,5 @@
 using DataIngestService.Data;
+using DataIngestService.Services.Transactions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataIngestService;
@@ -14,6 +15,10 @@ public class Program
         // Add services to the container.
         builder.Services.AddControllers();
         builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+        builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddScoped<ITransactionFingerprintService, TransactionFingerprintService>();
+        builder.Services.AddScoped<ITransactionValidator, TransactionValidator>();
+        builder.Services.AddScoped<ITransactionIngestionService, TransactionIngestionService>();
         builder.Services.AddAuthorization();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

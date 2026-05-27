@@ -1,8 +1,7 @@
 using DataIngestService.Contracts;
-using DataIngestService.Data;
 using DataIngestService.Extensions;
+using DataIngestService.Services.Transactions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DataIngestService.Controllers;
 
@@ -10,11 +9,11 @@ namespace DataIngestService.Controllers;
 [Route("ingest")]
 public class IngestController : ControllerBase
 {
-    private readonly AppDbContext _dbContext;
+    private readonly ITransactionIngestionService _transactionIngestionService;
 
-    public IngestController(AppDbContext dbContext)
+    public IngestController(ITransactionIngestionService transactionIngestionService)
     {
-        _dbContext = dbContext;
+        _transactionIngestionService = transactionIngestionService;
     }
 
     [HttpPost("transaction")]
@@ -25,15 +24,18 @@ public class IngestController : ControllerBase
         IngestTransactionRequest request,
         CancellationToken cancellationToken)
     {
-        var transaction = request.ToEntity();
+        var result = await _transactionIngestionService.IngestAsync(request, cancellationToken);
 
-        _dbContext.Transactions.Add(transaction);
-
-        try
+        if (result.IsValidationFailed)
         {
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            return BadRequest(new ValidationProblemDetails(result.ToModelStateDictionary())
+            {
+                Title = "Transaction validation failed",
+                Status = StatusCodes.Status400BadRequest
+            });
         }
-        catch (DbUpdateException exception) when (exception.IsUniqueViolation())
+
+        if (result.IsDuplicate)
         {
             return Conflict(new ProblemDetails
             {
@@ -43,7 +45,7 @@ public class IngestController : ControllerBase
             });
         }
 
-        var response = transaction.ToResponse();
+        var response = result.Transaction!.ToResponse();
         return CreatedAtAction(nameof(GetTransaction), new { id = response.Id }, response);
     }
 
@@ -52,9 +54,7 @@ public class IngestController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TransactionResponse>> GetTransaction(Guid id, CancellationToken cancellationToken)
     {
-        var transaction = await _dbContext.Transactions
-            .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        var transaction = await _transactionIngestionService.GetByIdAsync(id, cancellationToken);
 
         if (transaction is null)
         {
