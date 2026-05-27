@@ -25,10 +25,10 @@ public class IngestController : ControllerBase
     [ProducesResponseType<BatchIngestResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<BatchIngestResponse>> IngestBatch(
-        [FromForm] IFormFile? file,
+        [FromForm] BatchIngestRequest request,
         CancellationToken cancellationToken)
     {
-        if (file is null || file.Length == 0)
+        if (request.File is null || request.File.Length == 0)
         {
             return BadRequest(new ProblemDetails
             {
@@ -38,7 +38,7 @@ public class IngestController : ControllerBase
             });
         }
 
-        await using var stream = file.OpenReadStream();
+        await using var stream = request.File.OpenReadStream();
         var response = await _batchTransactionIngestionService.IngestAsync(stream, cancellationToken);
 
         return Ok(response);
