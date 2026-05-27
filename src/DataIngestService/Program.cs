@@ -1,4 +1,3 @@
-
 using DataIngestService.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,12 +29,12 @@ public class Program
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
         app.UseAuthorization();
         app.MapControllers();
 
-        await using (var scope = app.Services.CreateAsyncScope())
+        if (builder.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
         {
+            await using var scope = app.Services.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             await dbContext.Database.MigrateAsync();
         }
