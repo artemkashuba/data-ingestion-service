@@ -1,0 +1,84 @@
+using System;
+using DataIngestService.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+#nullable disable
+
+namespace DataIngestService.Migrations;
+
+[DbContext(typeof(AppDbContext))]
+partial class AppDbContextModelSnapshot : ModelSnapshot
+{
+    protected override void BuildModel(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .HasAnnotation("ProductVersion", "8.0.20")
+            .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+        modelBuilder.Entity("DataIngestService.Data.Entities.TransactionEntity", b =>
+        {
+            b.Property<Guid>("Id")
+                .ValueGeneratedNever()
+                .HasColumnType("uuid")
+                .HasColumnName("id");
+
+            b.Property<decimal>("Amount")
+                .HasPrecision(18, 2)
+                .HasColumnType("numeric(18,2)")
+                .HasColumnName("amount");
+
+            b.Property<string>("Currency")
+                .IsRequired()
+                .HasMaxLength(3)
+                .HasColumnType("character varying(3)")
+                .HasColumnName("currency");
+
+            b.Property<string>("CustomerId")
+                .IsRequired()
+                .HasMaxLength(128)
+                .HasColumnType("character varying(128)")
+                .HasColumnName("customer_id");
+
+            b.Property<string>("DeduplicationKey")
+                .IsRequired()
+                .HasMaxLength(512)
+                .HasColumnType("character varying(512)")
+                .HasColumnName("deduplication_key");
+
+            b.Property<string>("ExternalTransactionId")
+                .HasMaxLength(128)
+                .HasColumnType("character varying(128)")
+                .HasColumnName("external_transaction_id");
+
+            b.Property<DateTimeOffset>("IngestedAt")
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("ingested_at");
+
+            b.Property<string>("SourceChannel")
+                .IsRequired()
+                .HasMaxLength(64)
+                .HasColumnType("character varying(64)")
+                .HasColumnName("source_channel");
+
+            b.Property<DateTimeOffset>("TransactionDate")
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("transaction_date");
+
+            b.HasKey("Id");
+
+            b.HasIndex("DeduplicationKey")
+                .IsUnique()
+                .HasDatabaseName("ux_transactions_deduplication_key");
+
+            b.HasIndex("CustomerId", "TransactionDate")
+                .HasDatabaseName("ix_transactions_customer_id_transaction_date");
+
+            b.HasIndex("SourceChannel", "TransactionDate")
+                .HasDatabaseName("ix_transactions_source_channel_transaction_date");
+
+            b.ToTable("transactions");
+        });
+    }
+}

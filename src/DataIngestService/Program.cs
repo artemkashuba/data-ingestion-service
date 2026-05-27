@@ -1,13 +1,20 @@
 
+using DataIngestService.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace DataIngestService;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
         // Add services to the container.
+        builder.Services.AddControllers();
+        builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
         builder.Services.AddAuthorization();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -25,8 +32,14 @@ public class Program
 
         app.UseHttpsRedirection();
         app.UseAuthorization();
-        
+        app.MapControllers();
 
-        app.Run();
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await dbContext.Database.MigrateAsync();
+        }
+
+        await app.RunAsync();
     }
 }
