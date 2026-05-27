@@ -6,14 +6,42 @@ using Microsoft.AspNetCore.Mvc;
 namespace DataIngestService.Controllers;
 
 [ApiController]
-[Route("ingest")]
+[Route("api/[controller]")]
 public class IngestController : ControllerBase
 {
+    private readonly IBatchTransactionIngestionService _batchTransactionIngestionService;
     private readonly ITransactionIngestionService _transactionIngestionService;
 
-    public IngestController(ITransactionIngestionService transactionIngestionService)
+    public IngestController(
+        ITransactionIngestionService transactionIngestionService,
+        IBatchTransactionIngestionService batchTransactionIngestionService)
     {
         _transactionIngestionService = transactionIngestionService;
+        _batchTransactionIngestionService = batchTransactionIngestionService;
+    }
+
+    [HttpPost("batch")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType<BatchIngestResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BatchIngestResponse>> IngestBatch(
+        [FromForm] IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Empty file",
+                Detail = "The uploaded CSV file is empty.",
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+
+        await using var stream = file.OpenReadStream();
+        var response = await _batchTransactionIngestionService.IngestAsync(stream, cancellationToken);
+
+        return Ok(response);
     }
 
     [HttpPost("transaction")]

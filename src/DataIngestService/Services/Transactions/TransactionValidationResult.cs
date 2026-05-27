@@ -13,7 +13,7 @@ public class TransactionValidationResult
 
     public static TransactionValidationResult Success()
     {
-        return new TransactionValidationResult(Array.Empty<TransactionValidationError>());
+        return new TransactionValidationResult(errors:[]);
     }
 
     public static TransactionValidationResult Failure(IReadOnlyCollection<TransactionValidationError> errors)
