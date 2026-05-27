@@ -1,5 +1,7 @@
 using DataIngestService.Data;
 using DataIngestService.Infrastructure.ExceptionHandling;
+using DataIngestService.Services.Customers;
+using DataIngestService.Services.Stats;
 using DataIngestService.Services.Transactions;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +26,8 @@ public class Program
         builder.Services.AddScoped<ITransactionValidator, TransactionValidator>();
         builder.Services.AddScoped<ITransactionIngestionService, TransactionIngestionService>();
         builder.Services.AddScoped<IBatchTransactionIngestionService, BatchTransactionIngestionService>();
+        builder.Services.AddScoped<ICustomerTransactionQueryService, CustomerTransactionQueryService>();
+        builder.Services.AddScoped<IStatsSummaryService, StatsSummaryService>();
         builder.Services.AddAuthorization();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
