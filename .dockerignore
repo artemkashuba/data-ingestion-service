@@ -1,0 +1,9 @@
+**/.DS_Store
+**/.idea
+**/bin
+**/obj
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml

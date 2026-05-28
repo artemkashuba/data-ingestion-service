@@ -55,3 +55,10 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Rider / IntelliJ
+.idea/
+*.DotSettings.user
+
+# macOS
+.DS_Store
