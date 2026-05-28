@@ -74,21 +74,6 @@ public class IngestController : ControllerBase
         }
 
         var response = result.Transaction!.ToResponse();
-        return CreatedAtAction(nameof(GetTransaction), new { id = response.Id }, response);
-    }
-
-    [HttpGet("transaction/{id:guid}")]
-    [ProducesResponseType<TransactionResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TransactionResponse>> GetTransaction(Guid id, CancellationToken cancellationToken)
-    {
-        var transaction = await _transactionIngestionService.GetByIdAsync(id, cancellationToken);
-
-        if (transaction is null)
-        {
-            return NotFound();
-        }
-
-        return Ok(transaction.ToResponse());
+        return StatusCode(StatusCodes.Status201Created, response);
     }
 }

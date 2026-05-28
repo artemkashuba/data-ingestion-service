@@ -1,6 +1,5 @@
 using DataIngestService.Contracts;
 using DataIngestService.Data;
-using DataIngestService.Data.Entities;
 using DataIngestService.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,12 +54,5 @@ public class TransactionIngestionService : ITransactionIngestionService
         }
 
         return TransactionIngestionResult.Created(transaction);
-    }
-
-    public Task<TransactionEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
-    {
-        return _dbContext.Transactions
-            .AsNoTracking()
-            .SingleOrDefaultAsync(transaction => transaction.Id == id, cancellationToken);
     }
 }
