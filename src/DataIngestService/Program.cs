@@ -13,9 +13,9 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+                               ?? throw new InvalidOperationException(
+                                   "Connection string 'DefaultConnection' is not configured.");
 
-        // Add services to the container.
         builder.Services.AddControllers();
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -28,9 +28,8 @@ public class Program
         builder.Services.AddScoped<IBatchTransactionIngestionService, BatchTransactionIngestionService>();
         builder.Services.AddScoped<ICustomerTransactionQueryService, CustomerTransactionQueryService>();
         builder.Services.AddScoped<IStatsSummaryService, StatsSummaryService>();
-        builder.Services.AddAuthorization();
 
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddAuthorization();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
@@ -47,13 +46,19 @@ public class Program
         app.UseAuthorization();
         app.MapControllers();
 
+        
+        await ApplyMigration(builder, app);
+        await app.RunAsync();
+    }
+
+    private static async Task ApplyMigration(WebApplicationBuilder builder, WebApplication app)
+    {
         if (builder.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
         {
             await using var scope = app.Services.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             await dbContext.Database.MigrateAsync();
         }
-
-        await app.RunAsync();
     }
+
 }
