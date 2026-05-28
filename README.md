@@ -104,13 +104,13 @@ Ingestion__BatchSize=500 dotnet run --project src/DataIngestService/DataIngestSe
 ### Real-Time Transaction Ingestion
 
 ```http
-POST /ingest/transaction
+POST /api/ingest/transaction
 ```
 
 Example:
 
 ```bash
-curl -i -X POST http://localhost:8080/ingest/transaction \
+curl -i -X POST http://localhost:8080/api/ingest/transaction \
   -H "Content-Type: application/json" \
   -d '{
     "customerId": "customer-1",
@@ -126,15 +126,24 @@ Duplicate transactions return `409 Conflict`.
 ### Batch CSV Ingestion
 
 ```http
-POST /ingest/batch
+POST /api/ingest/batch
 ```
 
 Example:
 
 ```bash
-curl -X POST http://localhost:8080/ingest/batch \
+curl -X POST http://localhost:8080/api/ingest/batch \
   -F "file=@transactions.csv"
 ```
+
+A larger sample file is included for manual testing:
+
+```bash
+curl -X POST http://localhost:8080/api/ingest/batch \
+  -F "file=@samples/transactions-10k.csv"
+```
+
+The sample contains 10,000 data rows: 9,500 valid unique rows, 300 duplicate rows, and 200 invalid rows.
 
 Example CSV:
 
@@ -262,6 +271,8 @@ Services/
     aggregate summary queries
 
 Infrastructure/
+  Configuration/
+    centralized configuration keys
   ExceptionHandling/
     global ProblemDetails exception handler
 ```
@@ -311,9 +322,11 @@ The test suite covers:
 - Add CSV upload limits and a configurable maximum error count.
 - Move long-running batch ingestion to a background job if files grow beyond the assignment scope.
 - Add authentication/authorization if this were exposed beyond a local assignment environment.
+- Add another validation for currency. Accept only real ones
 
 ## AI Usage
 
+CODEX
 AI tools were used as a coding collaborator for planning, implementation support, and review of trade-offs.
 
 Accepted with modification:
@@ -332,8 +345,9 @@ Written and reviewed directly:
 
 Things caught and corrected during the process:
 
+- switched to usage of IOptions for some services
+- top level statements were ignored and followed the old approach
+- AI implemented automigration step on startup, I made it feature-flag based instead
 - a handwritten EF migration was not discoverable by EF tooling, so it was removed and regenerated with `dotnet ef`
 - Swagger does not support a bare `[FromForm] IFormFile`, so the upload was wrapped in a request DTO
 - validation attributes were removed from request DTOs so `TransactionValidator` is the single validation path
-
-Every submitted line should be understandable from the code and tests in this repository.
